@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superior Classes - Landscape Receipt</title>
+    <style>
+        /* General Styling */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; }
+        button { color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; transition: background 0.3s; }
+        .btn-gen { background-color: #003366; }
+        .btn-gen:hover { background-color: #002244; }
+        .btn-clear { background-color: #d9534f; } /* Red color for clear */
+        .btn-clear:hover { background-color: #c9302c; }
+
+        /* Input Form Layout */
+        .form-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .form-col { flex: 1; min-width: 250px; }
+
+        /* Receipt Output Styling (Hidden by default) */
+        #receipt-output { 
+            display: none; 
+            margin-top: 30px; 
+            border: 3px solid #003366; 
+            padding: 40px; 
+            background: #fff; 
+            max-width: 1000px; /* Wider for landscape */
+            margin: auto;
+        }
+        .header { text-align: center; border-bottom: 3px double #003366; padding-bottom: 15px; margin-bottom: 30px; }
+        /* Logo Styling */
+        .logo-img { width: 100px; height: auto; margin-bottom: 10px; }
+        
+        .header h1 { margin: 5px 0; color: #003366; text-transform: uppercase; letter-spacing: 1px; font-size: 32px; }
+        .header p { margin: 5px 0; font-style: italic; color: #666; font-size: 18px; }
+        
+        .receipt-body { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 16px; }
+        .details-col p { margin: 8px 0; }
+        
+        .fee-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 16px; }
+        .fee-table th, .fee-table td { border: 1px solid #003366; padding: 12px; text-align: left; }
+        .fee-table th { background-color: #e6efff; color: #003366; }
+        .total-row { font-weight: bold; background-color: #f0f0f0; font-size: 18px; }
+        
+        .footer { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .signature-box { border-top: 2px solid #003366; width: 200px; text-align: center; padding-top: 10px; font-weight: bold; }
+        .contact-info { font-size: 14px; text-align: center; margin-top: 30px; color: white; background: #003366; padding: 10px; }
+
+        /* PRINT SPECIFIC CSS - LANDSCAPE MODE */
+        @media print {
+            @page { 
+                size: landscape; /* Forces landscape orientation */
+                margin: 1cm;
+            }
+            body { background: white; padding: 0; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            #receipt-output { 
+                display: block !important; 
+                border: 3px solid #003366 !important;
+                width: 95% !important; /* Use full width of landscape page */
+                margin: 20px auto !important;
+                box-shadow: none;
+            }
+            /* Ensure colors print correctly */
+            .header { border-bottom-color: #003366 !important; }
+            .fee-table th { background-color: #e6efff !important; color: #003366 !important; border-color: #003366 !important; }
+            .fee-table td { border-color: #003366 !important; }
+            .contact-info { background: #003366 !important; color: white !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container no-print">
+    <h2 style="color: #003366; text-align: center;">Superior Classes - Receipt Maker</h2>
+    <p style="text-align:center; color:green; font-size:13px;">* Details will be auto-saved for the next receipt.</p>
+    
+    <div class="form-row">
+        <div class="form-col">
+            <div class="form-group">
+                <label>Student Name / छात्र का नाम</label>
+                <input type="text" id="name" placeholder="Enter Name">
+            </div>
+            <div class="form-group">
+                <label>Class / कक्षा</label>
+                <input type="text" id="class" placeholder="e.g. 10th (Maths)">
+            </div>
+            <div class="form-group">
+                <label>Month of Fee / महीना</label>
+                <input type="text" id="month" placeholder="e.g. March 2026">
+            </div>
+            <div class="form-group">
+                <label>Date / दिनांक</label>
+                <input type="date" id="date">
+            </div>
+        </div>
+        <div class="form-col">
+             <div class="form-group">
+                <label>Tuition Fee Amount (₹)</label>
+                <input type="number" id="feeAmount" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Late Fine / Other Charges (₹)</label>
+                <input type="number" id="lateFine" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Payment Mode / माध्यम</label>
+                <select id="method">
+                    <option value="Cash">Cash (नकद)</option>
+                    <option value="UPI (GPay/PhonePe)">Online / UPI</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="btn-group">
+        <button class="btn-clear" onclick="clearName()">Clear Name</button>
+        <button class="btn-gen" onclick="generateReceipt()">🖨️ Generate Receipt</button>
+    </div>
+</div>
+
+<div id="receipt-output">
+    <div class="header">
+        <img src="https://i.ibb.co/Jjdvndg0/1771321557990.png" alt="Superior Classes Logo" class="logo-img">
+        
+        <h1>SUPERIOR CLASSES</h1>
+        <p>"Ab Har Bachha Banega Superior!"</p>
+    </div>
+    
+    <div style="text-align: right; margin-bottom: 15px; font-size: 16px;">
+        <strong>Receipt No:</strong> <span id="rNo" style="color: #003366; font-weight:bold;"></span>
+    </div>
+
+    <div class="receipt-body">
+        <div class="details-col" style="flex: 2;">
+            <p><strong>Received From (Name):</strong> <span id="rName"></span></p>
+            <p><strong>For Class/Course:</strong> <span id="rClass"></span></p>
+        </div>
+        <div class="details-col" style="flex: 1; text-align: right;">
+            <p><strong>Date:</strong> <span id="rDate"></span></p>
+            <p><strong>Fee Month:</strong> <span id="rMonth"></span></p>
+        </div>
+    </div>
+
+    <table class="fee-table">
+        <thead>
+            <tr>
+                <th>Description (विवरण)</th>
+                <th style="text-align: right; width: 150px;">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Monthly Tuition Fee</td>
+                <td style="text-align: right;" id="rFee">0.00</td>
+            </tr>
+            <tr>
+                <td>Late Fine / Other Charges</td>
+                <td style="text-align: right;" id="rFine">0.00</td>
+            </tr>
+            <tr class="total-row">
+                <td>TOTAL RECEIVED</td>
+                <td style="text-align: right;" id="rTotal">0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; font-size: 16px;">
+        <strong>Payment Mode:</strong> <span id="rMethod"></span>
+        <span style="float: right; font-weight: bold; color: #003366;" id="rAmountWords"></span>
+    </div>
+
+    <div class="footer">
+        <div>
+            <p style="font-size: 12px; color: #666;">Note: Fees once paid is not refundable.</p>
+        </div>
+        <div class="signature-box">
+            Superior Classes<br>(Signature & Stamp)
+        </div>
+    </div>
+
+    <div class="contact-info">
+        📍 Lal Kothi Road, Katihar &nbsp; | &nbsp; 📞 9852192802
+    </div>
+</div>
+
+<script>
+    // --- PART 1: LOAD SAVED DATA ON START ---
+    window.onload = function() {
+        // Set date: either saved one or today's date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = localStorage.getItem('saved_date') || today;
+
+        // Retrieve other fields if they exist in memory
+        if(localStorage.getItem('saved_class')) document.getElementById('class').value = localStorage.getItem('saved_class');
+        if(localStorage.getItem('saved_month')) document.getElementById('month').value = localStorage.getItem('saved_month');
+        if(localStorage.getItem('saved_fee')) document.getElementById('feeAmount').value = localStorage.getItem('saved_fee');
+        if(localStorage.getItem('saved_fine')) document.getElementById('lateFine').value = localStorage.getItem('saved_fine');
+        if(localStorage.getItem('saved_method')) document.getElementById('method').value = localStorage.getItem('saved_method');
+    };
+
+    // Helper to clear only name for next student
+    function clearName() {
+        document.getElementById('name').value = "";
+        document.getElementById('name').focus();
+    }
+
+    function generateReceipt() {
+        const name = document.getElementById('name').value;
+        const className = document.getElementById('class').value;
+        const month = document.getElementById('month').value;
+        const fee = parseFloat(document.getElementById('feeAmount').value) || 0;
+        const fine = parseFloat(document.getElementById('lateFine').value) || 0;
+        const method = document.getElementById('method').value;
+        const dateInput = document.getElementById('date').value;
+
+        // --- PART 2: SAVE DATA TO BROWSER MEMORY ---
+        localStorage.setItem('saved_class', className);
+        localStorage.setItem('saved_month', month);
+        localStorage.setItem('saved_fee', fee);
+        localStorage.setItem('saved_fine', fine);
+        localStorage.setItem('saved_method', method);
+        localStorage.setItem('saved_date', dateInput);
+        
+        // Format Date nicely
+        const dateObj = new Date(dateInput);
+        const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        
+        // Random Receipt Number with Year prefix
+        const currentYear = new Date().getFullYear().toString().substr(-2);
+        const receiptNo = "SC" + currentYear + "-" + Math.floor(1000 + Math.random() * 9000);
+        const totalAmount = fee + fine;
+
+        // Fill receipt
+        document.getElementById('rName').innerText = name || "_________________";
+        document.getElementById('rClass').innerText = className || "_________________";
+        document.getElementById('rMonth').innerText = month || "_________________";
+        document.getElementById('rDate').innerText = formattedDate;
+        document.getElementById('rNo').innerText = receiptNo;
+        document.getElementById('rMethod').innerText = method;
+        
+        document.getElementById('rFee').innerText = fee.toFixed(2);
+        document.getElementById('rFine').innerText = fine.toFixed(2);
+        document.getElementById('rTotal').innerText = "₹ " + totalAmount.toFixed(2);
+        document.getElementById('rAmountWords').innerText = "( Total: ₹ " + totalAmount + " )";
+
+        // Trigger Print
+        window.print();
+    }
+</script>
+
+</body>
+</html>
