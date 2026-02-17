@@ -13,30 +13,34 @@
         input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         
         /* Buttons */
-        .btn-group { display: flex; gap: 10px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button { color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; transition: background 0.3s; }
         .btn-gen { background-color: #003366; }
         .btn-gen:hover { background-color: #002244; }
-        .btn-clear { background-color: #d9534f; } /* Red color for clear */
+        .btn-clear { background-color: #d9534f; } 
         .btn-clear:hover { background-color: #c9302c; }
+        .btn-upload { background-color: #28a745; position: relative; overflow: hidden;}
+        .btn-upload input[type=file] { position: absolute; top: 0; right: 0; min-width: 100%; min-height: 100%; font-size: 100px; text-align: right; filter: alpha(opacity=0); opacity: 0; outline: none; background: white; cursor: inherit; display: block; }
 
         /* Input Form Layout */
         .form-row { display: flex; gap: 20px; flex-wrap: wrap; }
         .form-col { flex: 1; min-width: 250px; }
 
-        /* Receipt Output Styling (Hidden by default) */
+        /* --- RECEIPT OUTPUT STYLING --- */
         #receipt-output { 
-            display: none; 
+            display: none; /* Hidden on screen */
             margin-top: 30px; 
-            border: 3px solid #003366; 
+            border: 3px solid #003366; /* The main border */
             padding: 40px; 
             background: #fff; 
-            max-width: 1000px; /* Wider for landscape */
+            max-width: 1000px; 
             margin: auto;
+            position: relative; /* Ensures everything stays inside */
         }
-        .header { text-align: center; border-bottom: 3px double #003366; padding-bottom: 15px; margin-bottom: 30px; }
-        /* Logo Styling */
-        .logo-img { width: 100px; height: auto; margin-bottom: 10px; }
+        
+        /* Header Fixes */
+        .header { text-align: center; border-bottom: 3px double #003366; padding-bottom: 15px; margin-bottom: 30px; position: relative; }
+        .logo-img { width: 120px; height: auto; margin-bottom: 5px; display: inline-block; } /* Increased size slightly and ensured it's inside */
         
         .header h1 { margin: 5px 0; color: #003366; text-transform: uppercase; letter-spacing: 1px; font-size: 32px; }
         .header p { margin: 5px 0; font-style: italic; color: #666; font-size: 18px; }
@@ -49,26 +53,33 @@
         .fee-table th { background-color: #e6efff; color: #003366; }
         .total-row { font-weight: bold; background-color: #f0f0f0; font-size: 18px; }
         
-        .footer { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; }
-        .signature-box { border-top: 2px solid #003366; width: 200px; text-align: center; padding-top: 10px; font-weight: bold; }
+        .footer { margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end; }
+        
+        /* --- SIGNATURE FIX (BIGGER SIZE) --- */
+        .signature-box { width: 220px; text-align: center; position: relative; }
+        .sign-img { 
+            max-height: 120px; /* Increased height limit (was 60px) */
+            max-width: 100%; /* Allow it to fill the box width */
+            display: block; 
+            margin: 0 auto 5px auto; 
+        }
+        .sign-line { border-top: 2px solid #003366; padding-top: 5px; font-weight: bold; }
+
         .contact-info { font-size: 14px; text-align: center; margin-top: 30px; color: white; background: #003366; padding: 10px; }
 
-        /* PRINT SPECIFIC CSS - LANDSCAPE MODE */
+        /* PRINT SPECIFIC CSS */
         @media print {
-            @page { 
-                size: landscape; /* Forces landscape orientation */
-                margin: 1cm;
-            }
+            @page { size: landscape; margin: 0.5cm; }
             body { background: white; padding: 0; -webkit-print-color-adjust: exact; }
             .no-print { display: none !important; }
             #receipt-output { 
                 display: block !important; 
                 border: 3px solid #003366 !important;
-                width: 95% !important; /* Use full width of landscape page */
+                width: 95% !important; 
                 margin: 20px auto !important;
                 box-shadow: none;
+                box-sizing: border-box; /* Ensures padding doesn't break layout */
             }
-            /* Ensure colors print correctly */
             .header { border-bottom-color: #003366 !important; }
             .fee-table th { background-color: #e6efff !important; color: #003366 !important; border-color: #003366 !important; }
             .fee-table td { border-color: #003366 !important; }
@@ -80,7 +91,7 @@
 
 <div class="container no-print">
     <h2 style="color: #003366; text-align: center;">Superior Classes - Receipt Maker</h2>
-    <p style="text-align:center; color:green; font-size:13px;">* Details will be auto-saved for the next receipt.</p>
+    <p style="text-align:center; color:green; font-size:13px;">* Details & Signature will be auto-saved.</p>
     
     <div class="form-row">
         <div class="form-col">
@@ -116,6 +127,17 @@
                     <option value="Cash">Cash (नकद)</option>
                     <option value="UPI (GPay/PhonePe)">Online / UPI</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Upload Signature (Image)</label>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn-upload">
+                        📂 Upload Sign
+                        <input type="file" id="sigInput" accept="image/*" onchange="handleSignature(this)">
+                    </button>
+                    <button class="btn-clear" style="width: auto;" onclick="removeSignature()">❌ Remove</button>
+                </div>
+                <small style="color: #666; font-size: 11px;">* Upload once, it will be saved automatically.</small>
             </div>
         </div>
     </div>
@@ -181,8 +203,12 @@
         <div>
             <p style="font-size: 12px; color: #666;">Note: Fees once paid is not refundable.</p>
         </div>
+        
         <div class="signature-box">
-            Superior Classes<br>(Signature & Stamp)
+            <img id="rSigImg" class="sign-img" style="display: none;" alt="Signature">
+            <div class="sign-line">
+                Superior Classes<br>(Signature & Stamp)
+            </div>
         </div>
     </div>
 
@@ -192,26 +218,58 @@
 </div>
 
 <script>
-    // --- PART 1: LOAD SAVED DATA ON START ---
+    // --- PART 1: LOAD SAVED DATA & SIGNATURE ON START ---
     window.onload = function() {
-        // Set date: either saved one or today's date
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = localStorage.getItem('saved_date') || today;
 
-        // Retrieve other fields if they exist in memory
         if(localStorage.getItem('saved_class')) document.getElementById('class').value = localStorage.getItem('saved_class');
         if(localStorage.getItem('saved_month')) document.getElementById('month').value = localStorage.getItem('saved_month');
         if(localStorage.getItem('saved_fee')) document.getElementById('feeAmount').value = localStorage.getItem('saved_fee');
         if(localStorage.getItem('saved_fine')) document.getElementById('lateFine').value = localStorage.getItem('saved_fine');
         if(localStorage.getItem('saved_method')) document.getElementById('method').value = localStorage.getItem('saved_method');
+
+        // Load Signature
+        const savedSig = localStorage.getItem('saved_signature_img');
+        if(savedSig) {
+            const img = document.getElementById('rSigImg');
+            img.src = savedSig;
+            img.style.display = 'block';
+        }
     };
 
-    // Helper to clear only name for next student
+    // --- PART 2: SIGNATURE HANDLING ---
+    function handleSignature(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Show in Receipt
+                const img = document.getElementById('rSigImg');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                
+                // Save to Memory
+                localStorage.setItem('saved_signature_img', e.target.result);
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removeSignature() {
+        document.getElementById('rSigImg').style.display = 'none';
+        document.getElementById('rSigImg').src = '';
+        localStorage.removeItem('saved_signature_img');
+        document.getElementById('sigInput').value = ""; // Reset input
+    }
+
     function clearName() {
         document.getElementById('name').value = "";
         document.getElementById('name').focus();
     }
 
+    // --- PART 3: GENERATE RECEIPT ---
     function generateReceipt() {
         const name = document.getElementById('name').value;
         const className = document.getElementById('class').value;
@@ -221,7 +279,7 @@
         const method = document.getElementById('method').value;
         const dateInput = document.getElementById('date').value;
 
-        // --- PART 2: SAVE DATA TO BROWSER MEMORY ---
+        // Save Data
         localStorage.setItem('saved_class', className);
         localStorage.setItem('saved_month', month);
         localStorage.setItem('saved_fee', fee);
@@ -229,16 +287,14 @@
         localStorage.setItem('saved_method', method);
         localStorage.setItem('saved_date', dateInput);
         
-        // Format Date nicely
+        // Formatting
         const dateObj = new Date(dateInput);
         const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-        
-        // Random Receipt Number with Year prefix
         const currentYear = new Date().getFullYear().toString().substr(-2);
         const receiptNo = "SC" + currentYear + "-" + Math.floor(1000 + Math.random() * 9000);
         const totalAmount = fee + fine;
 
-        // Fill receipt
+        // Fill HTML
         document.getElementById('rName').innerText = name || "_________________";
         document.getElementById('rClass').innerText = className || "_________________";
         document.getElementById('rMonth').innerText = month || "_________________";
@@ -251,7 +307,6 @@
         document.getElementById('rTotal').innerText = "₹ " + totalAmount.toFixed(2);
         document.getElementById('rAmountWords').innerText = "( Total: ₹ " + totalAmount + " )";
 
-        // Trigger Print
         window.print();
     }
 </script>
